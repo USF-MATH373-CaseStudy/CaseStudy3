@@ -1,51 +1,92 @@
+library(cluster)
 library(factoextra)
+library(dendextend)
+library(magrittr)
 
 ####### Below is for hierarchical clustering ########
-df <- cluster::agriculture
+df <- USArrests
 
+# euclidean_hc <- function(df) {
+#   row <- nrow(df)
+#   x <- data.frame(matrix(ncol = row, nrow = row))
+#   for (i in 1:row) {
+#     for (j in 1:row) {
+#       x[i, j] <- sqrt(sum((df[i, ] - df[j, ]) ^ 2))
+#     }
+#   }
+#   return (x)
+# }
+# 
+# manhattan_hc <- function(df) {
+#   row <- nrow(df)
+#   x <- data.frame(matrix(ncol = row, nrow = row))
+#   for (i in 1:row) {
+#     for (j in 1:row) {
+#       x[i, j] <- sqrt(sum(abs(df[i, ] - df[j, ])))
+#     }
+#   }
+#   return (x)
+# }
+# 
+# correlation_hc <- function(df) {
+#   row <- nrow(df)
+#   x <- data.frame(matrix(ncol = row, nrow = row))
+#   for (i in 1:row) {
+#     for (j in 1:row) {
+#       x[i, j] <- 1 - cor(t(df[i, ]), t(df[j, ]))
+#     }
+#   }
+#   return (x)
+# }
 
-euclidean_hc(df)
-manhattan_hc(df)
-correlation_hc(df)
-t(df)
-cor(df)
-nrow(dist.cor)
-dist.cor <- get_dist(df, method = "pearson")
-dist.cor_2 <- round(as.matrix(dist.cor)[1:12,1:12],4)
-cor(dist.cor_2)
+## Preparing df ##
+## Omit NAs and standardize variables ##
+df %<>% na.omit() %>% scale()
 
-euclidean_hc <- function(df) {
-  row <- nrow(df)
-  x <- data.frame(matrix(ncol = row, nrow = row))
-  for (i in 1:row) {
-    for (j in 1:row) {
-      x[i, j] <- sqrt(sum((df[i, ] - df[j, ]) ^ 2))
-    }
-  }
-  return (x)
-}
+## Compute the disimilarity matrix ##
+d.hc_euclidean <- dist(df, method = "euclidean")
+d.hc_manhattan <- dist(df, method = "manhattan")
 
-manhattan_hc <- function(df) {
-  row <- nrow(df)
-  x <- data.frame(matrix(ncol = row, nrow = row))
-  for (i in 1:row) {
-    for (j in 1:row) {
-      x[i, j] <- sqrt(sum(abs(df[i, ] - df[j, ])))
-    }
-  }
-  return (x)
-}
+## Run hierarchical clustering algorithms ##
+clust.hc_euclidean_single <- hclust(d.hc_euclidean, method = "single")
+clust.hc_manhattan_single <- hclust(d.hc_manhattan, method = "single")
+clust.hc_euclidean_average <- hclust(d.hc_euclidean, method = "average")
+clust.hc_manhattan_average <- hclust(d.hc_manhattan, method = "average")
 
-correlation_hc <- function(df) {
-  row <- nrow(df)
-  x <- data.frame(matrix(ncol = row, nrow = row))
-  for (i in 1:row) {
-    for (j in 1:row) {
-      x[i, j] <- 1 - cor(t(df[i, ]), t(df[j, ]))
-    }
-  }
-  return (x)
-}
+## Visualize dendrograms ##
+par(mfrow = c(1, 2))
+plot(clust.hc_euclidean_single, cex = 0.5, hang = -1,
+     main = "Dendrogram of Hierarchical Clustering with\nSingle Linkage and Euclidean Distance")
+rect.hclust(clust.hc_euclidean_single, k = 5, border = 1:5)
+plot(clust.hc_manhattan_single, cex = 0.5, hang = -1,
+     main = "Dendrogram of Hierarchical Clustering with\nSingle Linkage and Manhattan Distance")
+rect.hclust(clust.hc_manhattan_single, k = 5, border = 1:5)
+
+plot(clust.hc_euclidean_average, cex = 0.5, hang = -1,
+     main = "Dendrogram of Hierarchical Clustering with\nAverage Linkage and Euclidean Distance")
+rect.hclust(clust.hc_euclidean_average, k = 5, border = 1:5)
+plot(clust.hc_manhattan_average, cex = 0.5, hang = -1,
+     main = "Dendrogram of Hierarchical Clustering with\nAverage Linkage and Manhattan Distance")
+rect.hclust(clust.hc_manhattan_average, k = 5, border = 1:5)
+
+## Visualize cluster scatter plots ##
+grp.hc_euclidean_single <- cutree(clust.hc_euclidean_single, k = 5)
+grp.hc_manhattan_single <- cutree(clust.hc_manhattan_single, k = 5)
+fviz_cluster(list(data = df, cluster = grp.hc_euclidean_single),
+             main = "Scatter Plot of Hierarchical Clustering with\nSingle Linkage and Euclidean Distance",
+             ggtheme = theme_minimal())
+fviz_cluster(list(data = df, cluster = grp.hc_manhattan_single),
+             main = "Scatter Plot of Hierarchical Clustering with\nSingle Linkage and Manhattan Distance",
+             ggtheme = theme_minimal())
+
+grp.hc_euclidean_average <- cutree(clust.hc_euclidean_average, k = 5)
+grp.hc_manhattan_average <- cutree(clust.hc_manhattan_average, k = 5)
+fviz_cluster(list(data = df, cluster = grp.hc_euclidean_average),
+             main = "Scatter Plot of Hierarchical Clustering with\nAverage Linkage and Euclidean Distance",
+             ggtheme = theme_minimal())
+fviz_cluster(list(data = df, cluster = grp.hc_manhattan_average),
+             main = "Scatter Plot of Hierarchical Clustering with\nAverage Linkage and Manhattan Distance",
+             ggtheme = theme_minimal())
 
 ####### Above is for hierarchical clustering ########
 ####### Below is for kmean ##########
@@ -53,7 +94,7 @@ correlation_hc <- function(df) {
 df <- cluster::agriculture
 threshold = 0.1
 
-euclidean <- function(df,mean_pt,link) {
+euclidean <- function(df, mean_pt, link) {
   df_row <- nrow(df)
   df_means <- nrow(mean_pt)
   clusters <- c()
@@ -82,7 +123,7 @@ euclidean <- function(df,mean_pt,link) {
   return (clusters)
 }
 
-manhattan <- function(df,mean_pt,link) {
+manhattan <- function(df, mean_pt, link) {
   df_row <- nrow(df)
   df_means <- nrow(mean_pt)
   clusters <- c()
