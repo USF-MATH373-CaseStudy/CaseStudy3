@@ -1,3 +1,5 @@
+library(factoextra)
+
 ####### Below is for hierarchical clustering ########
 df <- cluster::agriculture
 
@@ -8,12 +10,9 @@ correlation_hc(df)
 t(df)
 cor(df)
 nrow(dist.cor)
-dist.cor <- get_dist(df, method="pearson")
+dist.cor <- get_dist(df, method = "pearson")
 dist.cor_2 <- round(as.matrix(dist.cor)[1:12,1:12],4)
 cor(dist.cor_2)
-
-
-library(factoextra)
 
 euclidean_hc <- function(df) {
   row <- nrow(df)
@@ -109,43 +108,41 @@ manhattan <- function(df,mean_pt,link) {
   return (clusters)
 }
 
-
-
-# correlation <- function(df,mean_pt,link) {
-#   df_row <- nrow(df)
-#   df_means <- nrow(mean_pt)
-#   clusters <- c()
-#   for (i in 1:df_row) {
-#     dis_vec = c()
-#     for (j in 1:df_means) {
-#       di <- 1 - cor(t(df[i, ]),t(df[j, ]))
-#       print(di)
-#     }
-#     clusters <- c(clusters, di)
-#   }
-#   return (clusters)
-# }
+correlation <- function(df,mean_pt,link) {
+  df_row <- nrow(df)
+  df_means <- nrow(mean_pt)
+  clusters <- c()
+  for (i in 1:df_row) {
+    dis_vec = c()
+    for (j in 1:df_means) {
+      di <- 1 - cor(t(df[i, ]),t(df[j, ]))
+      print(di)
+    }
+    clusters <- c(clusters, di)
+  }
+  return (clusters)
+}
 
 
 
 
 data <- df
 ## k-means
-kmeans <- function(data,k,method,link){
+kmeans <- function(data, k, method, link){
   row_data <- nrow(data)
-  random_vec <- sample.int(row_data,row_data,replace = F)
-  newData <- data.frame(matrix(ncol=2))
+  random_vec <- sample.int(row_data, row_data, replace = F)
+  newData <- data.frame(matrix(ncol = 2))
   names(newData) <- names(data)
   for(i in 1:row_data){
-    newData <- rbind(newData,data[random_vec[i],])
+    newData <- rbind(newData,data[random_vec[i], ])
   }
   
-  newData <- newData[2:(row_data+1),]
+  newData <- newData[2:(row_data + 1),]
   
-  x <- data[,1]
-  y <- data[,2]
+  x <- data[, 1]
+  y <- data[, 2]
   
-  d=matrix(data=NA, ncol=0, nrow=0)
+  d <- matrix(data = NA, ncol = 0, nrow = 0)
   
   for (i in 1:k)
     d <- c(d, c(x[i],y[i]))
@@ -153,11 +150,11 @@ kmeans <- function(data,k,method,link){
   oldMeans <- init
   ##print(paste("Old Means:",oldMeans))
 
-  if(method=="euclidean")
+  if (method == "euclidean")
     cl <- euclidean(data, oldMeans, link)
-  else if(method=="manhattan")
+  else if (method == "manhattan")
     cl <- manhattan(data, oldMeans, link)
-  else if(method=="correlation")
+  else if (method == "correlation")
     cl <- correlation(data, oldMeans, link)
   print(cl)
   newMeans <- UpdateMeans(data, cl, k)
@@ -165,18 +162,18 @@ kmeans <- function(data,k,method,link){
   thr <- delta(oldMeans,newMeans,method)
   print(thr)
   itr <- 1
-  while(thr > threshold)
+  while (thr > threshold)
   {
-    if(method=="euclidean")
+    if (method == "euclidean")
       cl <- euclidean(data, newMeans,link)
-    else if(method=="manhattan")
+    else if (method == "manhattan")
       cl <- manhattan(data, oldMeans, link)
-    else if(method=="correlation")
+    else if (method == "correlation")
       cl <- correlation(data, oldMeans, link)
     
     oldMeans <- newMeans
     newMeans <- UpdateMeans(data, cl, k)
-    thr <- delta(oldMeans, newMeans,method)
+    thr <- delta(oldMeans, newMeans, method)
     itr <- itr+1
   }
   
@@ -191,36 +188,34 @@ UpdateMeans <- function(m, cl, k){
     group <- which(cl == c)
     
     # compute the mean point of all points in cluster c
-    mt1 <- mean(m[group,1])
-    mt2 <- mean(m[group,2])
+    mt1 <- mean(m[group, 1])
+    mt2 <- mean(m[group, 2])
     vMean <- c(mt1, mt2)
     means <- c(means, vMean)
   }
-  means <- matrix(means, ncol=2, byrow=TRUE)
+  means <- matrix(means, ncol = 2, byrow = TRUE)
   return(means)
 }
 
-delta <- function(oldMeans, newMeans,method)
+delta <- function(oldMeans, newMeans, method)
 {
   a <- newMeans - oldMeans
-  if(method =="euclidean")
+  if(method == "euclidean")
     di <- max(sqrt(sum((a[1, ] - a[2, ]) ^ 2)))
-  else if (method=="manhattan")
+  else if (method == "manhattan")
     di <- max(abs((a[1, ] - a[2, ]) ^ 2))
-  else if (method=="correlation")
-    di <- 1-cor(t(a[1,]), t(a[2,]))
+  else if (method == "correlation")
+    di <- 1 - cor(t(a[1,]), t(a[2,]))
   return (di)
 }
 
 
-
-
 ## Test k-means
-answer <- kmeans(df,3,"euclidean","single")
-answer2 <- kmeans(df,5,"manhattan","single")
-answer3 <- kmeans(df,3,"correlation","single") ## Not working
+answer <- kmeans(df, 3, "euclidean", "single")
+answer2 <- kmeans(df, 5, "manhattan", "single")
+answer3 <- kmeans(df, 3, "correlation", "single") ## Not working
 
-answer4 <- kmeans(df,7,"euclidean","average")
+answer4 <- kmeans(df, 7, "euclidean", "average")
 
 table(answer)
 
